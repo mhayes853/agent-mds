@@ -427,6 +427,43 @@ struct MyValueTests {
 }
 ```
 
+### Never Use `@testable import Module`
+Never use `@testable` imports. If you need to expose something only for testing, make it's access modifier `package`.
+
+### Never Write Tests That Test Obvious Functionallity
+Tests are meant to test the logic for actual code, writing tests for obvious things does not add any value.
+
+Obvious things include:
+- Any functionallity guaranteed by the type system or compiler (eg. Synthesized `Hashable`, `Equatable`, and `Codable` conformances).
+- Trivial computed properties or calculations.
+- Trivial configuration.
+- Testing that trivial initialization works.
+- etc.
+
+```swift
+struct Item: Hashable, Sendable, Codable {
+  let name: String
+}
+
+// GOOD
+// No tests, the functionallity is obvious.
+
+// BAD
+
+@Test
+func `It Constructs A String`() {
+  let item = Item(name: "blob")
+  expectNoDifference(item.name, "blob")
+}
+
+@Test
+func `It Encodes`() throws {
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(Item(name: "blob"))
+    expectNoDifference(String(data: data, encoding: .utf8)!, "{\"name\":\"blob\"}")
+}
+```
+
 ## Building/Compiling
 ### Use `—disable-experimental-prebuilts` To Handle Build Errors In Packages With Macros
 If you run into a build error in a package with at least 1 macro target that states that the “SwiftCompilerPlugin” cannot be found, do the following:
